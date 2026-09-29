@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CVDesk - Free CV Maker</title>
+<meta name="description" content="Make a professional CV in minutes and download it as a PDF. Free, no sign-up.">
+<style>
+:root{--ink:#14213d;--teal:#0f766e;--gold:#f5b301;--bg:#eef2f5;--line:#d5dde3}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header.top{background:var(--ink);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+header.top b{font-size:1.25rem;letter-spacing:.3px}
+header.top span{opacity:.75;font-size:.9rem}
+main{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:20px;padding:20px;max-width:1300px;margin:auto}
+form,.side{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px}
+h2{font-size:1rem;margin:18px 0 8px}
+h2:first-child{margin-top:0}
+input,textarea{width:100%;padding:9px 10px;margin:0 0 8px;border:1px solid var(--line);border-radius:6px;font:inherit}
+textarea{min-height:70px;resize:vertical}
+input:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
+.item{border:1px dashed var(--line);border-radius:8px;padding:10px;margin-bottom:10px}
+button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--ink);background:#fff;color:var(--ink);padding:8px 12px}
+button.x{border-color:transparent;color:#a11;padding:2px 4px;font-size:.85rem}
+button.add{width:100%}
+.tpls{display:flex;gap:8px;flex-wrap:wrap}
+.tpls button.on{background:var(--ink);color:#fff}
+.tag{font-size:.7rem;background:var(--gold);color:#000;border-radius:4px;padding:1px 5px;margin-left:4px}
+.go{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:600;padding:12px 18px;font-size:1rem}
+.gold{background:var(--gold);border-color:var(--gold);color:#000;font-weight:600}
+.bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.paperwrap{overflow-x:auto}
+.paper{background:#fff;width:210mm;min-height:297mm;max-width:100%;padding:14mm;box-shadow:0 2px 14px rgba(0,0,0,.15);font-size:10.5pt;line-height:1.45;color:#222;font-family:Georgia,serif;margin:auto}
+.paper h1{margin:0;font-size:24pt;line-height:1.1}
+.paper .t{margin:2px 0;font-size:12pt;color:var(--acc)}
+.paper .c{margin:2px 0 10px;font-size:9.5pt;color:#555}
+.paper h3{margin:14px 0 4px;font-size:11pt;color:var(--acc);border-bottom:1.5px solid var(--acc);padding-bottom:2px}
+.paper .r{display:flex;justify-content:space-between;gap:10px;font-weight:bold}
+.paper .r i{font-weight:normal;color:#555;white-space:nowrap}
+.paper p{margin:2px 0}
+.paper .wm{margin-top:30px;text-align:center;font-size:8pt;color:#999}
+.paper h3{text-transform:uppercase;letter-spacing:.6px}
+.ph{float:right;width:32mm;height:38mm;object-fit:cover;outline:1px solid #bbb;margin-left:12px}
+.paper header:after{content:"";display:block;clear:both}
+.refs{display:flex;flex-wrap:wrap;gap:6px 30px}.refs div{min-width:44%}
+.classic{--acc:#14213d}
+.modern header,.bold header{margin:-14mm -14mm 10px;padding:12mm 14mm;color:#fff}
+.modern{--acc:#0f766e;font-family:system-ui,sans-serif}
+.modern header{background:#0f766e}.modern .t,.modern .c{color:#e6fffb}
+.bold{--acc:#b45309;font-family:system-ui,sans-serif}
+.bold header{background:#14213d}.bold .t{color:#f5b301}.bold .c{color:#cbd5e1}
+.side p{font-size:.9rem;margin:6px 0 12px}
+dialog{border:none;border-radius:12px;max-width:420px;padding:22px}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.msg{font-size:.85rem;min-height:1.2em}
+section{min-width:0}
+@media(max-width:860px){main{grid-template-columns:1fr;padding:12px}.paper{width:100%;min-height:0;padding:8mm;font-size:10pt}.modern header,.bold header{margin:-8mm -8mm 10px;padding:8mm}}
+@media print{body{background:#fff}header.top,form,.side,.bar{display:none}main{display:block;padding:0}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}.paper{box-shadow:none;margin:0;width:auto;padding:14mm;font-size:10.5pt;min-height:0}.modern header,.bold header{margin:-14mm -14mm 10px;padding:12mm 14mm}@page{size:A4;margin:0}}
+</style></head>
+<body>
+<header class="top"><b>CVDesk</b><span>Free CV maker. No sign-up. Your data stays on your device.</span></header>
+<main>
+<form onsubmit="return false" aria-label="CV details">
+  <h2>Template</h2>
+  <div class="tpls" id="tpls"></div>
+  <h2>About you</h2>
+  <label for="photo" style="font-size:.9rem">Passport photo</label>
+  <input type="file" id="photo" accept="image/*">
+  <button type="button" class="x" onclick="S.photo='';$('#photo').value='';draw()">Remove photo</button>
+  <input data-k="name" placeholder="Full name" autocomplete="name">
+  <input data-k="title" placeholder="Job title (e.g. Accountant)">
+  <input data-k="email" placeholder="Email" autocomplete="email">
+  <input data-k="phone" placeholder="Phone" autocomplete="tel">
+  <input data-k="place" placeholder="City, Country">
+  <input data-k="dob" placeholder="Date of birth (optional)">
+  <input data-k="nat" placeholder="Nationality (optional)">
+  <h2>Career objective</h2>
+  <textarea data-k="sum" placeholder="Your career objective in 2 or 3 sentences"></textarea>
+  <h2>Work experience</h2>
+  <div id="exp"></div><button type="button" class="add" onclick="add('exp')">Add job</button>
+  <h2>Education</h2>
+  <div id="edu"></div><button type="button" class="add" onclick="add('edu')">Add school</button>
+  <h2>Skills</h2>
+  <input data-k="skills" placeholder="Separate with commas: Excel, Teamwork, Sales">
+  <h2>Other information</h2>
+  <textarea data-k="other" placeholder="Languages, hobbies, certificates, awards"></textarea>
+  <h2>References</h2>
+  <div id="ref"></div><button type="button" class="add" onclick="add('ref')">Add referee</button>
+  <!-- AD SLOT: paste your Google AdSense code here once approved -->
+</form>
+<section>
+  <div class="bar">
+    <button class="go" onclick="dl()">Download PDF</button>
+    <a id="wa" target="_blank" rel="noopener"><button type="button" class="gold">Get your CV written for you</button></a>
+  </div>
+  <div class="paperwrap"><div class="paper classic" id="paper"></div></div>
+</section>
+</main>
+<dialog id="dlg">
+  <h2>Unlock premium templates</h2>
+  <p>Modern and Bold templates, no footer credit. One-time payment.</p>
+  <p><a id="pay" target="_blank" rel="noopener"><button type="button" class="gold">Pay to get your code</button></a></p>
+  <input id="code" placeholder="Enter unlock code" autocomplete="off">
+  <p class="msg" id="msg"></p>
+  <button type="button" class="go" onclick="unlock()">Unlock</button>
+  <button type="button" onclick="dlg.close()">Close</button>
+</dialog>
+<script>
+/* ===== EDIT THIS SECTION ===== */
+const CONFIG={
+  brand:"CVDesk",
+  whatsapp:"233248643827",            // your number, country code first, no + or spaces
+  payLink:"",                         // your Paystack / Gumroad / Flutterwave payment link
+  price:"",
+  unlockCodes:["GH-CV-7K2M","GH-CV-4Q9X","GH-CV-8R3T","GH-CV-2W6P","GH-CV-5N1D"]
+};
+/* ============================= */
+const $=s=>document.querySelector(s), dlg=$('#dlg');
+let S={name:'',title:'',email:'',phone:'',place:'',sum:'',skills:'',exp:[{}],edu:[{}],tpl:'classic',dob:'',nat:'',other:'',photo:'',ref:[{}]};
+try{const x=JSON.parse(localStorage.getItem('cv'));if(x&&x.exp)S=Object.assign(S,x)}catch(e){}
+const pro=()=>{try{return localStorage.getItem('pro')==='1'}catch(e){return false}};
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const F={exp:[['role','Job title'],['org','Company'],['dates','Dates (e.g. 2022 - 2024)'],['text','What you did and achieved','a']],
+         edu:[['school','School'],['deg','Qualification'],['dates','Dates']],
+         ref:[['name','Referee full name'],['org','Position and organisation'],['phone','Phone'],['email','Email']]};
+const T=[['classic','Classic',0],['modern','Modern',1],['bold','Bold',1]];
+
+function lists(){
+  for(const l of['exp','edu','ref'])$('#'+l).innerHTML=S[l].map((o,i)=>`<div class="item">`+F[l].map(([k,p,a])=>
+    a?`<textarea data-l="${l}" data-i="${i}" data-k="${k}" placeholder="${p}">${esc(o[k])}</textarea>`
+     :`<input data-l="${l}" data-i="${i}" data-k="${k}" placeholder="${p}" value="${esc(o[k])}">`).join('')
+    +`<button type="button" class="x" onclick="del('${l}',${i})">Remove</button></div>`).join('');
+}
+function tpls(){
+  $('#tpls').innerHTML=T.map(([id,n,p])=>`<button type="button" class="${S.tpl===id?'on':''}" onclick="setT('${id}')">${n}${p&&!pro()?'<span class="tag">PRO</span>':''}</button>`).join('');
+}
+function setT(t){
+  if(t!=='classic'&&!pro()){$('#msg').textContent='';dlg.showModal();return}
+  S.tpl=t;tpls();draw();
+}
+function add(l){S[l].push({});lists();draw()}
+function del(l,i){S[l].splice(i,1);if(!S[l].length)S[l].push({});lists();draw()}
+document.addEventListener('input',e=>{
+  const t=e.target,k=t.dataset.k;if(!k)return;
+  t.dataset.l?S[t.dataset.l][t.dataset.i][k]=t.value:S[k]=t.value;draw();
+});
+function draw(){
+  try{localStorage.setItem('cv',JSON.stringify(S))}catch(e){}
+  const c=[S.email,S.phone,S.place].filter(Boolean).map(esc).join(' | ');
+  const br=s=>esc(s).replace(/\n/g,'<br>');
+  const ex=S.exp.filter(o=>o.role||o.org||o.text).map(o=>`<div><div class="r"><span>${esc(o.role)}${o.org?', '+esc(o.org):''}</span><i>${esc(o.dates)}</i></div><p>${br(o.text)}</p></div>`).join('');
+  const ed=S.edu.filter(o=>o.school||o.deg).map(o=>`<div class="r"><span>${esc(o.deg)}${o.school?', '+esc(o.school):''}</span><i>${esc(o.dates)}</i></div>`).join('');
+  const sk=S.skills.split(',').map(s=>s.trim()).filter(Boolean).map(esc).join(' &bull; ');
+  const rf=S.ref.filter(o=>o.name||o.org).map(o=>`<div><b>${esc(o.name)}</b><br>${esc(o.org)}<br>${[o.phone,o.email].filter(Boolean).map(esc).join(' | ')}</div>`).join('');
+  const pd=[S.dob&&'Date of birth: '+esc(S.dob),S.nat&&'Nationality: '+esc(S.nat)].filter(Boolean).join(' | ');
+  const p=$('#paper');p.className='paper '+S.tpl;
+  p.innerHTML=`<header>${S.photo?`<img class="ph" src="${S.photo}" alt="Passport photo">`:''}<h1>${esc(S.name)||'Your Name'}</h1><p class="t">${esc(S.title)}</p><p class="c">${c}</p></header>`
+    +(S.sum?`<h3>Career Objective</h3><p>${br(S.sum)}</p>`:'')+(pd?`<h3>Personal Details</h3><p>${pd}</p>`:'')
+    +(ex?`<h3>Experience</h3>${ex}`:'')
+    +(ed?`<h3>Education</h3>${ed}`:'')
+    +(sk?`<h3>Skills</h3><p>${sk}</p>`:'')+(S.other?`<h3>Other Information</h3><p>${br(S.other)}</p>`:'')+(rf?`<h3>References</h3><div class="refs">${rf}</div>`:'')
+    +(pro()?'':`<p class="wm">Made free with ${esc(CONFIG.brand)}</p>`);
+}
+$('#photo').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{const k=Math.min(1,400/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);S.photo=c.toDataURL('image/jpeg',.85);draw()};im.src=URL.createObjectURL(f)};
+function dl(){window.print()}  // choose "Save as PDF" in the print window
+function unlock(){
+  const v=$('#code').value.trim();
+  if(CONFIG.unlockCodes.includes(v)){try{localStorage.setItem('pro','1')}catch(e){}
+    dlg.close();tpls();draw()}
+  else $('#msg').textContent='Code not recognised. Check it and try again.';
+}
+$('#wa').href='https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent('Hi, I need help writing my CV.');
+$('#pay').href=CONFIG.payLink||('https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent('Hi, I want to buy the premium unlock code.'));
+document.querySelectorAll('form [data-k]').forEach(i=>{if(!i.dataset.l)i.value=S[i.dataset.k]||''});
+lists();tpls();draw();
+</script>
+</body></html>
