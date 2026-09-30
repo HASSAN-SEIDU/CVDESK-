@@ -57,6 +57,22 @@ section{min-width:0}
 </style></head>
 <body>
 <header class="top"><b>CVDesk</b><span>Free CV maker. No sign-up. Your data stays on your device.</span></header>
+<div id="owner" hidden style="background:#fff;border-bottom:3px solid #f5b301;padding:14px 20px">
+  <div id="lock"><b>Owner access</b>
+    <input id="pin" type="password" inputmode="numeric" placeholder="Owner PIN" autocomplete="off" style="max-width:200px;display:inline-block;margin:0 8px">
+    <button type="button" onclick="login()">Enter</button> <span class="msg" id="pm"></span></div>
+  <div id="tools" hidden>
+    <button type="button" class="go" onclick="gen()">Generate unlock code</button>
+    <strong id="newcode" style="font-size:1.4rem;margin:0 10px"></strong>
+    <button type="button" onclick="cp()">Copy code</button>
+    <a id="sendc" target="_blank" rel="noopener"><button type="button" class="gold">Send on WhatsApp</button></a>
+    <p class="msg">Only give a code after you have received the payment in your MoMo account.</p>
+    <details><summary>Change owner PIN</summary>
+      <input id="npin" type="password" inputmode="numeric" placeholder="New PIN" style="max-width:200px">
+      <button type="button" onclick="mkpin()">Show new PIN code</button>
+      <p class="msg" id="pout" style="word-break:break-all"></p></details>
+  </div>
+</div>
 <main>
 <form onsubmit="return false" aria-label="CV details">
   <h2>Template</h2>
@@ -95,10 +111,10 @@ section{min-width:0}
 </section>
 </main>
 <dialog id="dlg">
-  <h2>Unlock premium templates</h2>
-  <p>Modern and Bold templates, no footer credit. One-time payment.</p>
-  <p><a id="pay" target="_blank" rel="noopener"><button type="button" class="gold">Pay to get your code</button></a></p>
-  <input id="code" placeholder="Enter unlock code" autocomplete="off">
+  <h2>Payment required</h2>
+  <p id="paytxt"></p>
+  <p><a id="paid" target="_blank" rel="noopener"><button type="button" class="gold">I have paid: message me on WhatsApp</button></a></p>
+  <input id="code" placeholder="Enter your unlocking code" autocomplete="off">
   <p class="msg" id="msg"></p>
   <button type="button" class="go" onclick="unlock()">Unlock</button>
   <button type="button" onclick="dlg.close()">Close</button>
@@ -107,9 +123,12 @@ section{min-width:0}
 /* ===== EDIT THIS SECTION ===== */
 const CONFIG={
   brand:"CVDesk",
-  whatsapp:"233248643827",            // your number, country code first, no + or spaces
-  payLink:"",                         // your Paystack / Gumroad / Flutterwave payment link
-  price:"",
+  whatsapp:"233248643827",
+  price:"GHS50",
+  momo:"0248643827",
+  momoName:"SEINI IMORO SEIDU",
+  secret:"seidu-cvdesk-9x4kq7",
+  pinHash:6382747261987956,
   unlockCodes:["GH-CV-7K2M","GH-CV-4Q9X","GH-CV-8R3T","GH-CV-2W6P","GH-CV-5N1D"]
 };
 /* ============================= */
@@ -160,15 +179,33 @@ function draw(){
     +(pro()?'':`<p class="wm">Made free with ${esc(CONFIG.brand)}</p>`);
 }
 $('#photo').onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();im.onload=()=>{const k=Math.min(1,400/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=im.width*k;c.height=im.height*k;c.getContext('2d').drawImage(im,0,0,c.width,c.height);S.photo=c.toDataURL('image/jpeg',.85);draw()};im.src=URL.createObjectURL(f)};
-function dl(){window.print()}  // choose "Save as PDF" in the print window
+function dl(){if(!pro()){$('#msg').textContent='';dlg.showModal();return}window.print()}  // choose "Save as PDF" in the print window
+const H=str=>{let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0,c;i<str.length;i++){c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)};
+const AL='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const chk=r=>{let n=H(r+CONFIG.secret),o='';for(let i=0;i<4;i++){o+=AL[n%32];n=Math.floor(n/32)}return o};
+function mk(){const b=crypto.getRandomValues(new Uint8Array(4));let r='';for(const x of b)r+=AL[x%32];return 'CV-'+r+'-'+chk(r)}
+function okCode(v){const m=/^CV-([A-Z2-9]{4})-([A-Z2-9]{4})$/.exec(v.trim().toUpperCase());return !!m&&chk(m[1])===m[2]}
 function unlock(){
   const v=$('#code').value.trim();
-  if(CONFIG.unlockCodes.includes(v)){try{localStorage.setItem('pro','1')}catch(e){}
+  if(okCode(v)||CONFIG.unlockCodes.includes(v)){try{localStorage.setItem('pro','1')}catch(e){}
     dlg.close();tpls();draw()}
   else $('#msg').textContent='Code not recognised. Check it and try again.';
 }
+function login(){
+  if(H($('#pin').value+CONFIG.secret)===CONFIG.pinHash){$('#lock').hidden=true;$('#tools').hidden=false}
+  else $('#pm').textContent='Wrong PIN.';
+}
+function gen(){
+  const c=mk();$('#newcode').textContent=c;
+  $('#sendc').href='https://wa.me/?text='+encodeURIComponent('Thank you for your payment. Your CVDesk unlocking code is: '+c);
+}
+function cp(){const c=$('#newcode').textContent;if(c)try{navigator.clipboard.writeText(c)}catch(e){}}
+function mkpin(){const v=$('#npin').value;$('#pout').textContent=v?'Replace the number after pinHash: in CONFIG with: '+H(v+CONFIG.secret):'Type a new PIN first.'}
+function own(){$('#owner').hidden=location.hash!=='#owner'}
+addEventListener('hashchange',own);own();
 $('#wa').href='https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent('Hi, I need help writing my CV.');
-$('#pay').href=CONFIG.payLink||('https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent('Hi, I want to buy the premium unlock code.'));
+$('#paytxt').textContent='You are required to pay an amount of '+CONFIG.price+' to '+CONFIG.momo+' (MoMo account name: '+CONFIG.momoName+') to receive your unlocking code in order to get your CV. After paying, tap the button below and send me your payment confirmation, and I will send you your unlocking code. THANK YOU.';
+$('#paid').href='https://wa.me/'+CONFIG.whatsapp+'?text='+encodeURIComponent('Hello, I have paid '+CONFIG.price+' to '+CONFIG.momo+' for my CVDesk unlocking code.');
 document.querySelectorAll('form [data-k]').forEach(i=>{if(!i.dataset.l)i.value=S[i.dataset.k]||''});
 lists();tpls();draw();
 </script>
